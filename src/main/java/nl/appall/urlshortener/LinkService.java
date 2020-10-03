@@ -8,15 +8,21 @@ import reactor.core.publisher.Mono;
 @Service
 public class LinkService {
 
-    private  final String baseUrl;
+    private final String baseUrl;
+    private final LinkRepository linkRepository;
 
-    public LinkService(@Value("${app.baseUrl}") String baseUrl) {
+    public LinkService(@Value("${app.baseUrl}") String baseUrl, LinkRepository linkRepository) {
         this.baseUrl = baseUrl;
+        this.linkRepository = linkRepository;
     }
 
-    Mono<String> shortenLink (String link){
+    Mono<String> shortenLink (String link) {
         String randomKey = RandomStringUtils.randomAlphabetic(6);
 // save to db
-        return Mono.just(baseUrl + randomKey);
+        return linkRepository.save(new Link(link, randomKey))
+                .map(result -> baseUrl + result.getKey());
+    }
+    Mono<Link> getOriginalLink(String key) {
+        return linkRepository.findByKey(key);
     }
 }
